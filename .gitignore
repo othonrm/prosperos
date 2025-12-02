@@ -24,6 +24,7 @@ pnpm-debug.log*
 .wrangler
 /.svelte-kit
 /build
+.last-run.json
 
 # OS
 .DS_Store

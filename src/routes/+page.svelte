@@ -1,2 +1,9 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<script lang="ts">
+	import FileInput from '../components/FileInput.svelte';
+	import NoSSR from '../components/NoSSR.svelte';
+</script>
+
+<h1>Prosperos</h1>
+<p>Upload your transactions or statement to consolidate your portfolio.</p>
+
+<FileInput />
