@@ -1,12 +1,17 @@
 <script lang="ts">
 	export const ssr = false;
 
+	let { fileContent = $bindable() } = $props();
+
 	let file = $state<File>();
 
 	const reader = new FileReader();
 
 	reader.addEventListener('load', (ev) => {
-		console.log(ev.target?.result);
+		const content = ev.target?.result;
+		if (typeof content === 'string' && content.length > 0) {
+			fileContent = ev.target?.result;
+		}
 	});
 
 	$effect(() => {
