@@ -53,15 +53,23 @@ export class Transaction {
 		);
 	}
 
-	getUnitPriceAsNumber(): number {
-		return Number.parseFloat(this.unitPrice);
+	private getUnitPriceAsNumber(): number {
+		return Number.parseFloat(this.unitPrice.replace('.', '').replace(',', '.'));
 	}
 
-	getQuantityAsNumber(): number {
-		return Number.parseFloat(this.quantity);
+	getUnitPriceCents(): number {
+		return this.getUnitPriceAsNumber() * 100;
+	}
+
+	private getQuantityAsNumber(): number {
+		return Number.parseFloat(this.quantity.replace('.', '').replace(',', '.'));
+	}
+
+	getUnitPriceHundreds(): number {
+		return this.getQuantityAsNumber() * 100;
 	}
 
 	getTotalValue(): number {
-		return this.getUnitPriceAsNumber() * this.getQuantityAsNumber();
+		return (this.getUnitPriceCents() * this.getUnitPriceHundreds()) / 10000;
 	}
 }

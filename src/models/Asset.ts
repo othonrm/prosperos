@@ -1,22 +1,33 @@
 import type { Transaction } from './Transaction';
 
+export type AssetCategory =
+	| 'Ações'
+	| 'BDR'
+	| 'Criptomoedas'
+	| 'ETF Exterior'
+	| 'ETF'
+	| 'Fundos imobiliários'
+	| 'REITS'
+	| 'Stocks'
+	| 'Tesouro direto';
+
 export class Asset {
-	category: string;
+	category: AssetCategory;
 	broker: string;
 	assetCode: string;
 	avgPriceCents: number;
 	quantityHundreds: number;
 	realQuantityHundreds: number;
-	totalValue: number;
+	totalValueCents: number;
 
 	constructor(
-		category: string,
+		category: AssetCategory,
 		broker: string,
 		assetCode: string,
 		avgPriceCents: number,
 		quantityHundreds: number,
 		realQuantityHundreds: number,
-		totalValue: number
+		totalValueCents: number
 	) {
 		this.category = category;
 		this.broker = broker;
@@ -24,33 +35,49 @@ export class Asset {
 		this.avgPriceCents = avgPriceCents;
 		this.quantityHundreds = quantityHundreds;
 		this.realQuantityHundreds = realQuantityHundreds;
-		this.totalValue = totalValue;
+		this.totalValueCents = totalValueCents;
 	}
 
 	public computeTransaction(transaction: Transaction): void {
-		const unitPriceCents = transaction.getUnitPriceAsNumber() * 100;
-		const qtyHundreds = transaction.getQuantityAsNumber() * 100;
+		const unitPriceCents = transaction.getUnitPriceCents();
+		const qtyHundreds = transaction.getUnitPriceHundreds();
 
-		if (transaction.operationType && transaction.operationType.toLowerCase() === 'c') {
+		const oldQuantity = this.quantityHundreds;
+
+		if (transaction.operationType.toLowerCase() === 'c') {
 			this.quantityHundreds += qtyHundreds;
 			this.realQuantityHundreds += qtyHundreds;
-			this.totalValue += unitPriceCents * qtyHundreds;
-		} else if (transaction.operationType && transaction.operationType.toLowerCase() === 'v') {
-			if (this.realQuantityHundreds >= qtyHundreds) {
-				this.realQuantityHundreds -= qtyHundreds;
-				this.totalValue -= unitPriceCents * qtyHundreds;
-			}
-		}
-
-		// Update the average price (weighted average of all purchases)
-		if (this.realQuantityHundreds > 0) {
-			this.avgPriceCents = this.totalValue / this.realQuantityHundreds;
+			this.totalValueCents += (qtyHundreds * unitPriceCents) / 100;
+			this.avgPriceCents =
+				(oldQuantity * this.avgPriceCents + qtyHundreds * unitPriceCents) / this.quantityHundreds;
 		} else {
-			this.avgPriceCents = 0; // If no securities are owned, average price is 0
+			this.quantityHundreds -= qtyHundreds;
+			this.realQuantityHundreds -= qtyHundreds;
+			this.totalValueCents -= (qtyHundreds * unitPriceCents) / 100;
 		}
 	}
 
 	public getTotalInvestedCents(): number {
 		return (this.avgPriceCents * this.quantityHundreds) / 100;
+	}
+
+	public getQuantityPrecision(): number {
+		switch (this.category) {
+			case 'Ações':
+			case 'BDR':
+			case 'ETF':
+			case 'Fundos imobiliários':
+			case 'Tesouro direto':
+				return 2;
+
+			case 'Criptomoedas':
+			case 'ETF Exterior':
+			case 'REITS':
+			case 'Stocks':
+				return 8;
+
+			default:
+				return 2;
+		}
 	}
 }
