@@ -4,6 +4,8 @@
 	import AssetTable from '../components/AssetTable.svelte';
 	import FileInput from '../components/FileInput.svelte';
 	import TransactionTable from '../components/TransactionTable.svelte';
+	import '../css/main.css';
+	import '../css/normalize.css';
 	import { Asset } from '../models/Asset';
 	import { Transaction } from '../models/Transaction';
 	import { parseCsvString } from '../utils/CsvParser';
@@ -88,10 +90,14 @@
 <br />
 <br />
 
-<label>
-	Store file contents.
-	<input bind:checked={$storeFileContent} type="checkbox" />
-</label>
+<div>
+	<label>
+		Store file contents.
+		<input bind:checked={$storeFileContent} type="checkbox" />
+	</label>
+</div>
+
+<hr />
 
 <h1>Portfolio</h1>
 
