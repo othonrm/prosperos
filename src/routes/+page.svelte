@@ -37,8 +37,6 @@
 	});
 
 	$effect(() => {
-		console.log('sortedTransactions: ', sortedTransactions);
-
 		if (sortedTransactions.length > 0) {
 			const newTransactions = new Map();
 			const newAssets = new Map();
@@ -55,15 +53,7 @@
 
 				const asset =
 					newAssets.get(transaction.assetCode) ||
-					new Asset(
-						transaction.category as AssetCategory,
-						transaction.broker,
-						transaction.assetCode,
-						0,
-						0,
-						0,
-						0
-					);
+					new Asset(transaction.category, transaction.broker, transaction.assetCode, 0, 0, 0, 0);
 
 				asset.computeTransaction(transaction);
 
@@ -92,7 +82,7 @@
 <br />
 <br />
 
-<table>
+<!-- <table>
 	<thead>
 		<tr>
 			<th>Asset</th>
@@ -138,6 +128,6 @@
 			</tr>
 		{/each}
 	</tbody>
-</table>
+</table> -->
 
 <TransactionTable transactions={sortedTransactions} />
