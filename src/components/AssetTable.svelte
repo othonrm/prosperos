@@ -17,6 +17,12 @@
 	const totalAmount = $derived(
 		assets.reduce((acc, curr) => acc + curr.getTotalInvestedCents() || 0, 0)
 	);
+	const totalAmountDisplayString = $derived(
+		(totalAmount / 100).toLocaleString('en-US', {
+			style: 'currency',
+			currency: assets[0]?.currency || 'BRL'
+		})
+	);
 
 	const columnDefs: ColDef<Asset>[] = [
 		{
@@ -87,12 +93,12 @@
 		},
 		pagination: true,
 		paginationPageSize: 10,
-		paginationPageSizeSelector: [20, 50, 100, assets.length],
+		paginationPageSizeSelector: [10, 20, 50, 100, assets.length],
 		domLayout: 'autoHeight'
 	});
 
 	$effect(() => {
-		gridApi?.updateGridOptions(gridOptions);
+		gridApi?.setGridOption('rowData', assets);
 	});
 
 	onMount(() => {
@@ -103,10 +109,7 @@
 <h2>
 	{props.category}
 
-	{(totalAmount / 100).toLocaleString('en-US', {
-		style: 'currency',
-		currency: 'BRL'
-	})}
+	<span>{totalAmountDisplayString}</span>
 </h2>
 
 <div class="grid-container">
@@ -116,6 +119,8 @@
 <style>
 	h2 {
 		margin-bottom: 0;
+		display: flex;
+		justify-content: space-between;
 	}
 
 	.grid-container {

@@ -83,12 +83,12 @@
 		},
 		pagination: true,
 		paginationPageSize: 10,
-		paginationPageSizeSelector: [20, 50, 100, transactions.length],
+		paginationPageSizeSelector: [10, 20, 50, 100, transactions.length],
 		domLayout: 'autoHeight'
 	});
 
 	$effect(() => {
-		gridApi?.updateGridOptions(gridOptions);
+		gridApi?.setGridOption('rowData', transactions);
 	});
 
 	onMount(() => {
