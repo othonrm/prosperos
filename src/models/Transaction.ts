@@ -1,8 +1,8 @@
 import type { AssetCategory } from './Asset';
 
-export type Fiat = 'BRL' | 'USD';
+export type Currency = 'BRL' | 'USD';
 
-export const AssetCategoryToCurrencyMap: Record<AssetCategory, Fiat> = {
+export const AssetCategoryToCurrencyMap: Record<AssetCategory, Currency> = {
 	Ações: 'BRL',
 	BDR: 'BRL',
 	Criptomoedas: 'BRL',
@@ -10,6 +10,7 @@ export const AssetCategoryToCurrencyMap: Record<AssetCategory, Fiat> = {
 	ETF: 'BRL',
 	'Fundos imobiliários': 'BRL',
 	REITS: 'USD',
+	'Renda Fixa': 'BRL',
 	Stocks: 'USD',
 	'Tesouro direto': 'BRL'
 };
@@ -40,7 +41,7 @@ export class Transaction {
 		unitPrice: string,
 		quantity: string,
 		fees: string,
-		currency: Fiat
+		currency: Currency
 	) {
 		this.category = category;
 		this.brokerage = brokerage;

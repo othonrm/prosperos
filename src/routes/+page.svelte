@@ -1,11 +1,15 @@
 <script lang="ts">
+	import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 	import { compareAsc, parse } from 'date-fns';
+	import AssetTable from '../components/AssetTable.svelte';
 	import FileInput from '../components/FileInput.svelte';
 	import TransactionTable from '../components/TransactionTable.svelte';
-	import { Asset, type AssetCategory } from '../models/Asset';
+	import { Asset } from '../models/Asset';
 	import { Transaction } from '../models/Transaction';
 	import { parseCsvString } from '../utils/CsvParser';
 	import { storable } from '../utils/Storable.svelte';
+
+	ModuleRegistry.registerModules([AllCommunityModule]);
 
 	const storeFileContent = storable('storeFileContent', false);
 	const fileContent = storable('statementContent', null, !$storeFileContent);
@@ -39,25 +43,35 @@
 	$effect(() => {
 		if (sortedTransactions.length > 0) {
 			const newTransactions = new Map();
-			const newAssets = new Map();
+			const newAssets = new Map<string, Asset>();
 
 			for (const transaction of sortedTransactions) {
-				const skipCategories = ['Ações', 'Fundos imobiliários', 'ETF'];
-				if (skipCategories.includes(transaction.category)) {
-					// continue;
-				}
-
 				const existingTransForAsset = newTransactions.get(transaction.assetCode) || [];
 				existingTransForAsset.push(transaction);
 				newTransactions.set(transaction.assetCode, existingTransForAsset);
 
 				const asset =
 					newAssets.get(transaction.assetCode) ||
-					new Asset(transaction.category, transaction.broker, transaction.assetCode, 0, 0, 0, 0);
+					new Asset(
+						transaction.category,
+						transaction.broker,
+						transaction.assetCode,
+						0,
+						0,
+						0,
+						0,
+						transaction.currency
+					);
 
 				asset.computeTransaction(transaction);
 
 				newAssets.set(transaction.assetCode, asset);
+			}
+
+			for (const asset of newAssets.values()) {
+				if (!(asset.getTotalInvestedCents() > 0)) {
+					newAssets.delete(asset.assetCode);
+				}
 			}
 
 			transactions = newTransactions;
@@ -79,55 +93,28 @@
 	<input bind:checked={$storeFileContent} type="checkbox" />
 </label>
 
-<br />
-<br />
+<h1>Portfolio</h1>
 
-<!-- <table>
-	<thead>
-		<tr>
-			<th>Asset</th>
-			<th>Average Price</th>
-			<td>Current Price</td>
-			<th>Difference (Avg / Current)</th>
-			<th>Quantity</th>
-			<th>HOLDINGS (Current)</th>
-			<th>Total Invested</th>
-			<th>Change (Today)</th>
-			<th>Change (Total)</th>
-			<th>% in Stocks</th>
-			<th>% in Portfolio</th>
-		</tr>
-	</thead>
-	<tbody>
-		{#each assets
-			.values()
-			.toArray()
-			.filter((asset) => asset.quantityHundreds > 0) as asset}
-			<tr>
-				<td>{asset.assetCode}</td>
-				<td>
-					{(asset.avgPriceCents / 100).toLocaleString('en-US', {
-						style: 'currency',
-						currency: 'USD'
-					})}
-				</td>
-				<td>Current Price</td>
-				<td>Difference (Avg / Current)</td>
-				<td>{(asset.realQuantityHundreds / 100).toFixed(asset.getQuantityPrecision())}</td>
-				<td>HOLDINGS (Current)</td>
-				<td>
-					{(asset.getTotalInvestedCents() / 100).toLocaleString('en-US', {
-						style: 'currency',
-						currency: 'USD'
-					})}
-				</td>
-				<td>Change (Today)</td>
-				<td>Change (Total)</td>
-				<td>% in Stocks</td>
-				<td>% in Portfolio</td>
-			</tr>
-		{/each}
-	</tbody>
-</table> -->
+<AssetTable assets={assets.values().toArray()} category="Ações" />
+<AssetTable assets={assets.values().toArray()} category="ETF" />
+<AssetTable assets={assets.values().toArray()} category="Fundos imobiliários" />
+<AssetTable assets={assets.values().toArray()} category="BDR" />
+
+<hr />
+
+<AssetTable assets={assets.values().toArray()} category="Tesouro direto" />
+<AssetTable assets={assets.values().toArray()} category="Renda Fixa" />
+
+<hr />
+
+<AssetTable assets={assets.values().toArray()} category="Stocks" />
+<AssetTable assets={assets.values().toArray()} category="ETF Exterior" />
+<AssetTable assets={assets.values().toArray()} category="REITS" />
+
+<hr />
+
+<AssetTable assets={assets.values().toArray()} category="Criptomoedas" />
+
+<hr />
 
 <TransactionTable transactions={sortedTransactions} />

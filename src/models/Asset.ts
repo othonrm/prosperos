@@ -1,4 +1,4 @@
-import type { Transaction } from './Transaction';
+import type { Currency, Transaction } from './Transaction';
 
 export type AssetCategory =
 	| 'Ações'
@@ -8,17 +8,19 @@ export type AssetCategory =
 	| 'ETF'
 	| 'Fundos imobiliários'
 	| 'REITS'
+	| 'Renda Fixa'
 	| 'Stocks'
 	| 'Tesouro direto';
 
 export class Asset {
-	category: AssetCategory;
-	broker: string;
-	assetCode: string;
-	avgPriceCents: number;
-	quantityHundreds: number;
-	realQuantityHundreds: number;
-	totalValueCents: number;
+	category;
+	broker;
+	assetCode;
+	avgPriceCents;
+	quantityHundreds;
+	realQuantityHundreds;
+	totalValueCents;
+	currency;
 
 	constructor(
 		category: AssetCategory,
@@ -27,7 +29,8 @@ export class Asset {
 		avgPriceCents: number,
 		quantityHundreds: number,
 		realQuantityHundreds: number,
-		totalValueCents: number
+		totalValueCents: number,
+		currency: Currency
 	) {
 		this.category = category;
 		this.broker = broker;
@@ -36,6 +39,7 @@ export class Asset {
 		this.quantityHundreds = quantityHundreds;
 		this.realQuantityHundreds = realQuantityHundreds;
 		this.totalValueCents = totalValueCents;
+		this.currency = currency;
 	}
 
 	public computeTransaction(transaction: Transaction): void {
