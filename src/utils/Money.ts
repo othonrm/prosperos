@@ -17,4 +17,11 @@ export class Money {
 			currency: currencyAtom
 		});
 	}
+
+	static GetDisplayString(amountCents: number, currency?: Currency): string {
+		return (amountCents / 100).toLocaleString(langAtom, {
+			style: 'currency',
+			currency: currency || currencyAtom
+		});
+	}
 }

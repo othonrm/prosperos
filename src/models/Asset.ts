@@ -51,23 +51,23 @@ export class Asset {
 		const unitPriceCents = transaction.getUnitPriceCents();
 		const qtyHundreds = transaction.getUnitPriceHundreds();
 
-		const oldQuantity = this.quantityHundreds;
+		const oldQuantity = this.realQuantityHundreds;
 
 		if (transaction.operationType.toLowerCase() === 'c') {
 			this.quantityHundreds += qtyHundreds;
 			this.realQuantityHundreds += qtyHundreds;
 			this.totalValueCents += (qtyHundreds * unitPriceCents) / 100;
 			this.avgPriceCents =
-				(oldQuantity * this.avgPriceCents + qtyHundreds * unitPriceCents) / this.quantityHundreds;
+				(oldQuantity * this.avgPriceCents + qtyHundreds * unitPriceCents) /
+				this.realQuantityHundreds;
 		} else {
-			this.quantityHundreds -= qtyHundreds;
 			this.realQuantityHundreds -= qtyHundreds;
 			this.totalValueCents -= (qtyHundreds * unitPriceCents) / 100;
 		}
 	}
 
 	public getTotalInvestedCents(): number {
-		const totalCents = (this.avgPriceCents * this.quantityHundreds) / 100;
+		const totalCents = (this.avgPriceCents * this.realQuantityHundreds) / 100;
 		return toCurrentCurrency(totalCents, this.currency);
 	}
 
@@ -80,7 +80,7 @@ export class Asset {
 
 	public getMarketTotalCents(): number {
 		if (!this.marketPriceCents) return 0;
-		const totalCents = (this.marketPriceCents * this.quantityHundreds) / 100;
+		const totalCents = (this.marketPriceCents * this.realQuantityHundreds) / 100;
 		return toCurrentCurrency(totalCents, this.currency);
 	}
 

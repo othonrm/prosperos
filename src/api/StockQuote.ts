@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 const quoteCache: Record<string, any> = JSON.parse(localStorage.getItem('quoteCache') || '{}');
-
-console.log('Loaded quote cache:', quoteCache);
 
 export const fetchMultipleQuotes = async (tickers: string[]) => {
 	const responses = [];

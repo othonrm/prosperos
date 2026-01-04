@@ -8,10 +8,12 @@
 	import TransactionTable from '../components/TransactionTable.svelte';
 	import '../css/main.css';
 	import '../css/normalize.css';
+	import { fetchCryptoQuotes } from '../api/CryptoQuote';
 	import { Asset, type AssetCategory } from '../models/Asset';
 	import { Transaction } from '../models/Transaction';
 	import { convertCurrency } from '../state/Currency.svelte';
 	import { parseCsvString } from '../utils/CsvParser';
+	import { Money } from '../utils/Money';
 	import { storable } from '../utils/Storable.svelte';
 
 	ModuleRegistry.registerModules([AllCommunityModule]);
@@ -37,6 +39,10 @@
 	});
 
 	const totalAllocation = $derived(totalPerCategory.values().reduce((acc, curr) => acc + curr, 0));
+
+	const totalInvested = $derived(
+		assetsArray.reduce((acc, curr) => acc + curr.getTotalInvestedCents(), 0)
+	);
 
 	$effect(() => {
 		if ($fileContent) {
@@ -95,12 +101,18 @@
 				}
 			}
 
-			fetchMultipleQuotes(newAssets.keys().toArray()).then((quotes) => {
+			fetchCryptoQuotes(
+				newAssets
+					.entries()
+					.toArray()
+					.filter(([, asset]) => asset.category === 'Criptomoedas')
+					.map(([symbol]) => symbol)
+			).then((quotes) => {
 				for (const quote of quotes) {
 					if (!quote) {
 						continue;
 					}
-					const asset = newAssets.get(quote.symbol);
+					const asset = newAssets.get(quote.coin);
 					if (quote?.regularMarketPrice >= 0 && asset) {
 						asset.marketPriceCents = convertCurrency(
 							quote.regularMarketPrice * 100,
@@ -109,8 +121,29 @@
 						);
 					}
 				}
-				transactions = newTransactions;
-				assets = newAssets;
+				fetchMultipleQuotes(
+					newAssets
+						.entries()
+						.toArray()
+						.filter(([, asset]) => asset.category !== 'Criptomoedas')
+						.map(([symbol]) => symbol)
+				).then((quotes) => {
+					for (const quote of quotes) {
+						if (!quote) {
+							continue;
+						}
+						const asset = newAssets.get(quote.symbol);
+						if (quote?.regularMarketPrice >= 0 && asset) {
+							asset.marketPriceCents = convertCurrency(
+								quote.regularMarketPrice * 100,
+								quote.currency,
+								asset.currency
+							);
+						}
+					}
+					transactions = newTransactions;
+					assets = newAssets;
+				});
 			});
 		}
 	});
@@ -132,6 +165,11 @@
 </div>
 
 <hr />
+
+<div>
+	{Money.GetDisplayString(totalAllocation)}
+	{Money.GetDisplayString(totalInvested)}
+</div>
 
 <h1>Portfolio</h1>
 
