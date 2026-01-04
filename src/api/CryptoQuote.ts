@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
+const quoteCacheKey = 'cryptoQuoteCache';
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-const quoteCache: Record<string, any> = JSON.parse(
-	localStorage.getItem('cryptoQuoteCache') || '{}'
-);
+const quoteCache: Record<string, any> = JSON.parse(localStorage.getItem(quoteCacheKey) || '{}');
 
 // const REQUEST_TICKER_LIMIT = 10;
+
+const cacheDurationMinutes = 60 * 6;
 
 export const fetchCryptoQuotes = async (tickers: string[]) => {
 	const responses = [];
@@ -27,7 +29,7 @@ export const fetchSingleQuote = async (coin: string) => {
 		const fetchedAt = new Date(quoteCache[coin].fetchedAt);
 		const now = new Date();
 		const diffMinutes = (now.getTime() - fetchedAt.getTime()) / 1000 / 60;
-		if (diffMinutes < 30) {
+		if (diffMinutes < cacheDurationMinutes) {
 			return quoteCache[coin];
 		}
 	}
@@ -40,7 +42,7 @@ export const fetchSingleQuote = async (coin: string) => {
 		...(data?.coins?.[0] || {}),
 		fetchedAt: new Date().toISOString()
 	};
-	localStorage.setItem('cryptoQuoteCache', JSON.stringify(quoteCache));
+	localStorage.setItem(quoteCacheKey, JSON.stringify(quoteCache));
 	if (!data.coins?.length) {
 		console.warn(`No data found for ticker: ${coin}`);
 		return null;

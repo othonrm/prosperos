@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
+const quoteCacheKey = 'stockQuoteCache';
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-const quoteCache: Record<string, any> = JSON.parse(localStorage.getItem('quoteCache') || '{}');
+const quoteCache: Record<string, any> = JSON.parse(localStorage.getItem(quoteCacheKey) || '{}');
+
+const cacheDurationMinutes = 60 * 6;
 
 export const fetchMultipleQuotes = async (tickers: string[]) => {
 	const responses = [];
@@ -18,7 +22,7 @@ export const fetchSingleQuote = async (ticker: string) => {
 		const fetchedAt = new Date(quoteCache[ticker].fetchedAt);
 		const now = new Date();
 		const diffMinutes = (now.getTime() - fetchedAt.getTime()) / 1000 / 60;
-		if (diffMinutes < 30) {
+		if (diffMinutes < cacheDurationMinutes) {
 			return quoteCache[ticker];
 		}
 	}
@@ -29,7 +33,7 @@ export const fetchSingleQuote = async (ticker: string) => {
 		...(data?.results?.[0] || {}),
 		fetchedAt: new Date().toISOString()
 	};
-	localStorage.setItem('quoteCache', JSON.stringify(quoteCache));
+	localStorage.setItem(quoteCacheKey, JSON.stringify(quoteCache));
 	if (!data.results?.length) {
 		console.warn(`No data found for ticker: ${ticker}`);
 		return null;

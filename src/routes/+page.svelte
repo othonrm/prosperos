@@ -8,6 +8,7 @@
 	import TransactionTable from '../components/TransactionTable.svelte';
 	import '../css/main.css';
 	import '../css/normalize.css';
+	import { fetchBrTreasuryBonds } from '../api/BrazilianTreasuryBondQuote';
 	import { fetchCryptoQuotes } from '../api/CryptoQuote';
 	import { Asset, type AssetCategory } from '../models/Asset';
 	import { Transaction } from '../models/Transaction';
@@ -101,6 +102,25 @@
 				}
 			}
 
+			fetchBrTreasuryBonds(
+				newAssets
+					.entries()
+					.toArray()
+					.filter(([, asset]) => asset.category === 'Tesouro direto')
+					.map(([symbol]) => symbol)
+			).then((bonds) => {
+				if (bonds?.length)
+					for (const bond of bonds) {
+						if (!bond?.unitaryRedemptionValue) {
+							continue;
+						}
+						const asset = newAssets.get(bond.bondKey);
+						if (asset) {
+							asset.marketPriceCents = bond.unitaryRedemptionValue * 100;
+						}
+					}
+			});
+
 			fetchCryptoQuotes(
 				newAssets
 					.entries()
@@ -125,7 +145,10 @@
 					newAssets
 						.entries()
 						.toArray()
-						.filter(([, asset]) => asset.category !== 'Criptomoedas')
+						.filter(
+							([, asset]) =>
+								asset.category !== 'Criptomoedas' && asset.category !== 'Tesouro direto'
+						)
 						.map(([symbol]) => symbol)
 				).then((quotes) => {
 					for (const quote of quotes) {
