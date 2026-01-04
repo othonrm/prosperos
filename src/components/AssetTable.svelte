@@ -2,6 +2,7 @@
 	import { type ColDef, type GridApi, type GridOptions, createGrid } from 'ag-grid-community';
 	import { onMount } from 'svelte';
 	import type { Asset, AssetCategory } from '../models/Asset';
+	import { currencyAtom } from '../state/Currency.svelte';
 
 	let gridContainer: HTMLElement;
 	let gridApi: GridApi | undefined = $state();
@@ -15,12 +16,13 @@
 	);
 
 	const totalAmount = $derived(
-		assets.reduce((acc, curr) => acc + curr.getTotalInvestedCents() || 0, 0)
+		assets.reduce((acc, curr) => acc + curr.getMarketTotalCents() || 0, 0)
 	);
+
 	const totalAmountDisplayString = $derived(
 		(totalAmount / 100).toLocaleString('en-US', {
 			style: 'currency',
-			currency: assets[0]?.currency || 'BRL'
+			currency: currencyAtom
 		})
 	);
 
@@ -36,7 +38,7 @@
 				params.data
 					? (params.data.avgPriceCents / 100).toLocaleString('en-US', {
 							style: 'currency',
-							currency: params.data.currency
+							currency: currencyAtom
 						})
 					: ' - '
 		},
@@ -54,18 +56,14 @@
 					: ' - '
 		},
 		{
-			headerName: 'HOLDINGS (Current)'
+			headerName: 'HOLDINGS (Current)',
+			colId: 'marketTotal',
+			valueGetter: (params) => (params.data ? params.data.getMarketTotalDisplay() : ' - ')
 		},
 		{
 			headerName: 'Total Invested',
 			colId: 'totalInvested',
-			valueGetter: (params) =>
-				params.data
-					? (params.data.getTotalInvestedCents() / 100).toLocaleString('en-US', {
-							style: 'currency',
-							currency: params.data.currency
-						})
-					: ' - '
+			valueGetter: (params) => (params.data ? params.data.getTotalInvestedDisplay() : ' - ')
 		},
 		{
 			headerName: 'Change (Today)'

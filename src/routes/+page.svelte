@@ -1,13 +1,16 @@
 <script lang="ts">
 	import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 	import { compareAsc, parse } from 'date-fns';
+	import { fetchMultipleQuotes } from '../api/StockQuote';
+	import AllocationChart from '../components/AllocationChart.svelte';
 	import AssetTable from '../components/AssetTable.svelte';
 	import FileInput from '../components/FileInput.svelte';
 	import TransactionTable from '../components/TransactionTable.svelte';
 	import '../css/main.css';
 	import '../css/normalize.css';
-	import { Asset } from '../models/Asset';
+	import { Asset, type AssetCategory } from '../models/Asset';
 	import { Transaction } from '../models/Transaction';
+	import { convertCurrency } from '../state/Currency.svelte';
 	import { parseCsvString } from '../utils/CsvParser';
 	import { storable } from '../utils/Storable.svelte';
 
@@ -18,6 +21,22 @@
 	let transactions = $state<Map<string, Transaction[]>>(new Map());
 	let sortedTransactions = $state<Transaction[]>([]);
 	let assets = $state<Map<string, Asset>>(new Map());
+
+	let totalPerCategory: Map<AssetCategory, number> = $state(new Map());
+
+	const assetsArray = $derived(assets.values().toArray());
+
+	$effect(() => {
+		const newMap = new Map();
+		for (const asset of assetsArray) {
+			let curr = newMap.get(asset.category) || 0;
+			curr += asset.getMarketTotalCents();
+			newMap.set(asset.category, curr);
+		}
+		totalPerCategory = newMap;
+	});
+
+	const totalAllocation = $derived(totalPerCategory.values().reduce((acc, curr) => acc + curr, 0));
 
 	$effect(() => {
 		if ($fileContent) {
@@ -76,8 +95,23 @@
 				}
 			}
 
-			transactions = newTransactions;
-			assets = newAssets;
+			fetchMultipleQuotes(newAssets.keys().toArray()).then((quotes) => {
+				for (const quote of quotes) {
+					if (!quote) {
+						continue;
+					}
+					const asset = newAssets.get(quote.symbol);
+					if (quote?.regularMarketPrice >= 0 && asset) {
+						asset.marketPriceCents = convertCurrency(
+							quote.regularMarketPrice * 100,
+							quote.currency,
+							asset.currency
+						);
+					}
+				}
+				transactions = newTransactions;
+				assets = newAssets;
+			});
 		}
 	});
 </script>
@@ -101,25 +135,27 @@
 
 <h1>Portfolio</h1>
 
-<AssetTable assets={assets.values().toArray()} category="Ações" />
-<AssetTable assets={assets.values().toArray()} category="ETF" />
-<AssetTable assets={assets.values().toArray()} category="Fundos imobiliários" />
-<AssetTable assets={assets.values().toArray()} category="BDR" />
+<AllocationChart {totalAllocation} {totalPerCategory} />
+
+<AssetTable assets={assetsArray} category="Ações" />
+<AssetTable assets={assetsArray} category="ETF" />
+<AssetTable assets={assetsArray} category="Fundos imobiliários" />
+<AssetTable assets={assetsArray} category="BDR" />
 
 <hr />
 
-<AssetTable assets={assets.values().toArray()} category="Tesouro direto" />
-<AssetTable assets={assets.values().toArray()} category="Renda Fixa" />
+<AssetTable assets={assetsArray} category="Tesouro direto" />
+<AssetTable assets={assetsArray} category="Renda Fixa" />
 
 <hr />
 
-<AssetTable assets={assets.values().toArray()} category="Stocks" />
-<AssetTable assets={assets.values().toArray()} category="ETF Exterior" />
-<AssetTable assets={assets.values().toArray()} category="REITS" />
+<AssetTable assets={assetsArray} category="Stocks" />
+<AssetTable assets={assetsArray} category="ETF Exterior" />
+<AssetTable assets={assetsArray} category="REITS" />
 
 <hr />
 
-<AssetTable assets={assets.values().toArray()} category="Criptomoedas" />
+<AssetTable assets={assetsArray} category="Criptomoedas" />
 
 <hr />
 

@@ -1,3 +1,5 @@
+import { currencyAtom, toCurrentCurrency } from '../state/Currency.svelte';
+import { langAtom } from '../state/Localization.svelte';
 import type { Currency, Transaction } from './Transaction';
 
 export type AssetCategory =
@@ -21,6 +23,7 @@ export class Asset {
 	realQuantityHundreds;
 	totalValueCents;
 	currency;
+	marketPriceCents?: number;
 
 	constructor(
 		category: AssetCategory,
@@ -30,7 +33,8 @@ export class Asset {
 		quantityHundreds: number,
 		realQuantityHundreds: number,
 		totalValueCents: number,
-		currency: Currency
+		currency: Currency,
+		marketPriceCents?: number
 	) {
 		this.category = category;
 		this.broker = broker;
@@ -40,6 +44,7 @@ export class Asset {
 		this.realQuantityHundreds = realQuantityHundreds;
 		this.totalValueCents = totalValueCents;
 		this.currency = currency;
+		this.marketPriceCents = marketPriceCents;
 	}
 
 	public computeTransaction(transaction: Transaction): void {
@@ -62,7 +67,28 @@ export class Asset {
 	}
 
 	public getTotalInvestedCents(): number {
-		return (this.avgPriceCents * this.quantityHundreds) / 100;
+		const totalCents = (this.avgPriceCents * this.quantityHundreds) / 100;
+		return toCurrentCurrency(totalCents, this.currency);
+	}
+
+	public getTotalInvestedDisplay(): string {
+		return (this.getTotalInvestedCents() / 100).toLocaleString(langAtom, {
+			style: 'currency',
+			currency: currencyAtom
+		});
+	}
+
+	public getMarketTotalCents(): number {
+		if (!this.marketPriceCents) return 0;
+		const totalCents = (this.marketPriceCents * this.quantityHundreds) / 100;
+		return toCurrentCurrency(totalCents, this.currency);
+	}
+
+	public getMarketTotalDisplay(): string {
+		return (this.getMarketTotalCents() / 100).toLocaleString(langAtom, {
+			style: 'currency',
+			currency: currencyAtom
+		});
 	}
 
 	public getQuantityPrecision(): number {

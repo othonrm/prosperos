@@ -1,3 +1,5 @@
+import { currencyAtom } from '../state/Currency.svelte';
+import { langAtom } from '../state/Localization.svelte';
 import type { AssetCategory } from './Asset';
 
 export type Currency = 'BRL' | 'USD';
@@ -80,6 +82,13 @@ export class Transaction {
 
 	getUnitPriceCents(): number {
 		return this.getUnitPriceAsNumber() * 100;
+	}
+
+	getUnitPriceDisplay(): string {
+		return (this.getUnitPriceCents() / 100).toLocaleString(langAtom, {
+			style: 'currency',
+			currency: currencyAtom
+		});
 	}
 
 	private getQuantityAsNumber(): number {

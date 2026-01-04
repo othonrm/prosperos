@@ -56,13 +56,7 @@
 		{
 			headerName: 'Price',
 			field: 'unitPrice',
-			valueFormatter: (params) =>
-				params?.data
-					? (params.data.getUnitPriceCents() / 100).toLocaleString('en-US', {
-							style: 'currency',
-							currency: params.data.currency
-						})
-					: ' - '
+			valueFormatter: (params) => (params?.data ? params.data.getUnitPriceDisplay() : ' - ')
 		},
 		{
 			headerName: 'Total',
